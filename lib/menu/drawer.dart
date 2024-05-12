@@ -1,4 +1,7 @@
+
 import 'package:flutter/material.dart';
+import 'package:ibtc/main.dart';
+import 'package:ibtc/reusable/utils.dart';
 
 class IBTCDrawer extends StatelessWidget {
   const IBTCDrawer({Key? key}) : super(key: key);
@@ -31,6 +34,39 @@ class IBTCDrawer extends StatelessWidget {
             onTap: () {
               // Update the state of the app.
               // ...
+            },
+          ),
+          ListTile(
+            title: const Text('Backup'),
+            onTap: () async{
+              var result = await Utils.exportDatabase(context);
+              if(result != null) {
+                if(context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(result),
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+          ListTile(
+            title: const Text('Restore'),
+            onTap: () async{
+             var result =  await Utils.restoreDatabase(context);
+              if(result != null) {
+                if(context.mounted) {
+                  Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) =>
+                     const MyHomePage()), (Route<dynamic> route) => false);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(result),
+                    ),
+                  );
+                }
+              }
             },
           ),
         ],

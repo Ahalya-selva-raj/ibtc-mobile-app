@@ -45,6 +45,7 @@ class _NewInvoiceState extends State<NewInvoice> {
   List<ProductItem>? getProductItems() {
     if (widget.invoice != null) {
       setState(() {
+        invoiceNumber.text = widget.invoice?.invoiceNumber ?? "";
         customerName.text = widget.invoice?.customerName ?? "";
         customerAddress.text = widget.invoice?.customerAddress ?? "";
         invoiceDate.text = DateFormat("dd/MM/yyyy")

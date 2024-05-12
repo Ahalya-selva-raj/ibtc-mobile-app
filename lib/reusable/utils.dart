@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:downloads_path_provider_28/downloads_path_provider_28.dart';
+import 'package:flutter/material.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter/foundation.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:path/path.dart' as path;
 
 class Utils {
   static int num = 0;
@@ -69,6 +71,52 @@ class Utils {
       await launchUrl(Uri.parse(emailLaunchUriString));
     } else {
       throw 'Could not launch $emailLaunchUriString';
+    }
+  }
+
+  static Future<String?> exportDatabase(context) async {
+    // Get the path of the SQLite database
+    String databasesPath = await getDatabasesPath();
+    String databasePath = path.join(databasesPath, 'ibtc-invoices.db');
+
+    // Get the path of the downloads directory
+    Directory? downloadsDirectory = await DownloadsPathProvider.downloadsDirectory;
+
+    // Copy the SQLite database file to the downloads directory
+    String exportFilePath = path.join(downloadsDirectory!.path, 'invoices_backup.db');
+    try {
+      await File(databasePath).copy(exportFilePath);
+      return "Backup completed successfully!";
+    } catch (e,s) {
+      debugPrintStack(stackTrace: s);
+    }
+    return null;
+  }
+
+  static Future<String?> restoreDatabase(BuildContext context) async {
+    // Get the path of the downloads directory
+    Directory? downloadsDirectory = await DownloadsPathProvider.downloadsDirectory;
+    if (downloadsDirectory == null) {
+      return 'Downloads directory not available!';
+    }
+
+    // Get the path of the backup file
+    String backupFilePath = path.join(downloadsDirectory.path, 'invoices_backup.db');
+    if (!await File(backupFilePath).exists()) {
+      return 'Backup file not found!';
+    }
+
+    // Get the path of the SQLite database directory
+    String databasesPath = await getDatabasesPath();
+    String databasePath = path.join(databasesPath, 'ibtc-invoices.db');
+
+    try {
+      // Copy the backup file to the database directory
+      await File(backupFilePath).copy(databasePath);
+      return 'Database restored successfully!';
+    } catch (e, s) {
+      debugPrintStack(stackTrace: s);
+      return 'Error restoring database!';
     }
   }
 }
