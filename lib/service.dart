@@ -1,6 +1,8 @@
+
 import 'package:flutter/services.dart';
 import 'package:ibtc/DbTables/invoice-table.dart';
 import 'package:ibtc/DbTables/product-item-table.dart';
+import 'package:ibtc/main.dart';
 import 'package:ibtc/reusable/utils.dart';
 import 'package:indian_currency_to_word/indian_currency_to_word.dart';
 import 'package:intl/intl.dart';
@@ -8,7 +10,7 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class Service {
   static Future<void> generateInvoice(
-      Invoice data, List<ProductItem> productList) async {
+      Invoice data, List<ProductItem> productList,  TemplateType templateType) async {
     //Create a PDF document.
     final PdfDocument document = PdfDocument();
     //Add page to the PDF
@@ -20,13 +22,14 @@ class Service {
       bounds: Rect.fromLTWH(0, 0, pageSize.width, pageSize.height),
     );
     //Generate PDF grid.
-    final PdfGrid grid = getGrid(productList);
-    //Draw the header section by creating text element
-    final PdfLayoutResult result = await drawHeader(page, pageSize, grid, data);
-    //Draw grid
+    final PdfGrid grid = getGrid(productList, templateType);
+
+    final PdfLayoutResult result =
+    await drawHeader(page, pageSize, grid, data, templateType);
+
     drawGrid(page, grid, result, data, productList);
-    //Add invoice footer
-    await drawFooter(page, pageSize,productList.length);
+
+    await drawFooter(page, pageSize, productList.length, templateType);
     //Save the PDF document
     final List<int> bytes = document.saveSync();
     //Dispose the document.
@@ -38,10 +41,10 @@ class Service {
 
   //Draws the invoice header
   static Future<PdfLayoutResult> drawHeader(
-      PdfPage page, Size pageSize, PdfGrid grid, Invoice data) async {
+      PdfPage page, Size pageSize, PdfGrid grid, Invoice data, TemplateType templateType) async {
     //Draw rectangle
     final ByteData imageDataByteData =
-        await rootBundle.load('assets/header.png');
+        await rootBundle.load('assets/${templateType == TemplateType.ibtc ? "header" : "oman-trading"}.png');
     final Uint8List imageData = imageDataByteData.buffer.asUint8List();
     final PdfBitmap image = PdfBitmap(imageData);
 
@@ -88,7 +91,7 @@ class Service {
   }
 
   //Draw the invoice footer data.
-  static Future<void> drawFooter(PdfPage page, Size pageSize, productCount) async {
+  static Future<void> drawFooter(PdfPage page, Size pageSize, productCount, TemplateType templateType) async {
     final PdfPen linePen =
         PdfPen(PdfColor(0, 0, 0), dashStyle: PdfDashStyle.dash);
     //Draw line
@@ -123,7 +126,7 @@ class Service {
   }
 
   //Create PDF grid and return
-  static PdfGrid getGrid(List<ProductItem> productList) {
+  static PdfGrid getGrid(List<ProductItem> productList, TemplateType templateType) {
     // Create a PDF grid
     final PdfGrid grid = PdfGrid();
     // Specify the columns count for the grid.
@@ -131,7 +134,13 @@ class Service {
     // Create the header row of the grid.
     final PdfGridRow headerRow = grid.headers.add(1)[0];
     // Set style for header row
-    headerRow.style.backgroundBrush = PdfSolidBrush(PdfColor(56, 78, 133));
+    final PdfColor headerColor =
+    templateType == TemplateType.ibtc
+        ? PdfColor(56, 78, 133)     // IBTC Blue
+        : PdfColor(177, 85, 57);      // Oman Trading Green
+
+    headerRow.style.backgroundBrush =
+        PdfSolidBrush(headerColor);
     headerRow.style.textBrush = PdfBrushes.white;
     headerRow.style.font =
         PdfStandardFont(PdfFontFamily.helvetica, 8, style: PdfFontStyle.bold);

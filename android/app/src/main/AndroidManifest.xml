@@ -9,7 +9,7 @@
         </intent>
     </queries>
     <application
-        android:label="ibtc"
+        android:label="Ahalio"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
